@@ -4,6 +4,8 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs').promises;
 
+const FILE_PATH = './src/talker.json';
+
 const customError = (message, code) => {
   const error = Error(message);
   error.code = code;
@@ -47,14 +49,27 @@ const validateTalk = (talk) => {
   validateTalkData(talk);
 };
 
-const updateTalkers = async (newTalker) => {
-  const oldTalkers = await fs.readFile('./src/talker.json', 'utf-8');
-  const parseOldTalkers = JSON.parse(oldTalkers);
-  const lastId = Math.max(...parseOldTalkers.map((talker) => talker.id));
+const getFile = async () => {
+  const oldTalkers = await fs.readFile(FILE_PATH, 'utf-8');
+  return JSON.parse(oldTalkers);
+};
+
+const createTalker = async (newTalker) => {
+  const oldFile = await getFile();
+  const lastId = Math.max(...oldFile.map((talker) => talker.id));
   const newTalkerWithId = { id: lastId + 1, ...newTalker };
-  const updatedTalkers = JSON.stringify([...parseOldTalkers, newTalkerWithId]);
-  await fs.writeFile('./src/talker.json', updatedTalkers);
+  const updatedTalkers = JSON.stringify([...oldFile, newTalkerWithId]);
+  await fs.writeFile(FILE_PATH, updatedTalkers);
   return newTalkerWithId;
+};
+
+const updatedTalker = async (newTalker, id) => {
+  const oldFile = await getFile();
+  const filteredTalkers = oldFile.filter((talker) => talker.id !== id);
+  const newTalkerUpdated = { id, ...newTalker };
+  const updatedTalkers = JSON.stringify([newTalkerUpdated, ...filteredTalkers]);
+  await fs.writeFile(FILE_PATH, updatedTalkers);
+  return newTalkerUpdated;
 };
 
 router.get('/', async (_req, res) => {
@@ -88,17 +103,26 @@ router.post('/', async (req, res) => {
     validateName(name);
     validateAge(age);
     validateTalk(talk);
-    const newTalker = await updateTalkers(req.body);
+    const newTalker = await createTalker(req.body);
     res.status(201).json(newTalker);
   } catch (err) {
-    console.log(err.code);
     res.status(err.code).json({ message: err.message });
   }
 });
 
-// router.put('/:id', (req, res) => {
-//   const { id } = req.params;
-// });
+router.put('/:id', async (req, res) => {
+  try {
+    const { name, age, talk } = req.body;
+    validateToken(req.headers.authorization);
+    validateName(name);
+    validateAge(age);
+    validateTalk(talk);
+    const newTalker = await updatedTalker(req.body, Number(req.params.id));
+    res.status(200).json(newTalker);
+  } catch (err) {
+    res.status(err.code).json({ message: err.message });
+  }
+});
 
 // router.delete('/:id', (req, res) => {
 //   const { id } = req.params;
