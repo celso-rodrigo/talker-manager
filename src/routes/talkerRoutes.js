@@ -72,6 +72,12 @@ const updatedTalker = async (newTalker, id) => {
   return newTalkerUpdated;
 };
 
+const deleteId = async (id) => {
+  const oldFile = await getFile();
+  const newFile = JSON.stringify(oldFile.filter((talker) => talker.id !== id));
+  await fs.writeFile(FILE_PATH, newFile);
+};
+
 router.get('/', async (_req, res) => {
   try {
     const data = await fs.readFile('./src/talker.json', 'utf-8');
@@ -124,8 +130,14 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// router.delete('/:id', (req, res) => {
-//   const { id } = req.params;
-// });
+router.delete('/:id', async (req, res) => {
+  try {
+    validateToken(req.headers.authorization);
+    await deleteId(Number(req.params.id));
+    res.status(204).end();
+  } catch (err) {
+    res.status(err.code).json({ message: err.message });
+  }
+});
 
 module.exports = router;
