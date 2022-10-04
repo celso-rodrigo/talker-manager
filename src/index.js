@@ -1,5 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
+const talkerRoutes = require('./routes/talkerRoutes');
 
 const app = express();
 app.use(bodyParser.json());
@@ -16,4 +17,4 @@ app.listen(PORT, () => {
   console.log('Online');
 });
 
-// Iniciado projeto
+app.use('/talker', talkerRoutes);
