@@ -12,17 +12,17 @@ const generateToken = () => {
   return token;
 };
 
-const validateEmail = (email) => !email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/);
-
-const validateSize = (string) => !string || !string.length;
-
-const validateForm = (email, password) => {
-  if (validateSize(password)) throw new Error('O campo "password" é obrigatório');
-  if (password.length < 6) throw new Error('O "password" deve ter pelo menos 6 caracteres');
-  if (validateSize(email)) throw new Error('O campo "email" é obrigatório');
-  if (validateEmail(email)) {
+const validateEmail = (email) => {
+  if (!email.match(/^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/)) {
     throw new Error('O "email" deve ter o formato "email@email.com"');
   }
+};
+
+const validateForm = (email, password) => {
+  if (!email) throw new Error('O campo "email" é obrigatório');
+  validateEmail(email);
+  if (!password) throw new Error('O campo "password" é obrigatório');
+  if (password.length < 6) throw new Error('O "password" deve ter pelo menos 6 caracteres');
 };
 
 router.post('/', (req, res) => {
