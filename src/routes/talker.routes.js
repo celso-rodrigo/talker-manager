@@ -36,17 +36,43 @@ const updatedTalker = async (newTalker, id) => {
   return newTalkerUpdated;
 };
 
-const filterTalkers = (term) => {
-  console.log(term);
-};
-
 const deleteId = async (id) => {
   const oldFile = await getFile();
   const newFile = JSON.stringify(oldFile.filter((talker) => talker.id !== id));
   await fs.writeFile(FILE_PATH, newFile);
 };
 
-router.get('/', async (_req, res) => {
+const findById = async (id) => {
+  const oldFile = await await getFile();
+  const personById = oldFile.filter((person) => person.id === Number(id));
+  if (!personById.length) throw new Error('Pessoa palestrante não encontrada');
+  return personById;
+};
+
+const checkForQuery = async (req, res, next) => {
+  const { id } = req.params;
+  const haveQuery = req.query.q;
+  const numberId = Number(id);
+  const haveId = !Number.isNaN(numberId);
+  if (!haveQuery && haveId) {
+    try {
+      const talker = await findById(id);
+      res.status(200).json(...talker);
+    } catch (err) {
+      res.status(404).json({ message: err.message });
+    }
+  } else {
+    next();
+  }
+};
+
+const filterTalkers = async (query) => {
+  const oldFile = await getFile();
+  const filteredTalkers = oldFile.filter((talker) => talker.name.includes(query));
+  return filteredTalkers;
+};
+
+router.get('/', async (req, res) => {
   try {
     const data = await fs.readFile('./src/talker.json', 'utf-8');
     const json = JSON.parse(data);
@@ -56,27 +82,17 @@ router.get('/', async (_req, res) => {
   }
 });
 
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = await fs.readFile(FILE_PATH, 'utf-8');
-    const personById = JSON.parse(data).filter((person) => person.id === Number(id));
-    if (!personById.length) throw new Error('Pessoa palestrante não encontrada');
-    res.status(200).json(...personById);
-  } catch (err) {
-    res.status(404).json({ message: err.message });
-  }
-});
-
-router.get('/search?q', async (req, res) => {
-  try {
-    const { q } = req.query;
-    validateToken(req.headers.authorization);
-    await filterTalkers(q);
-    res.status(200).end();
-  } catch (err) {
-    res.status(err.code).json({ message: err.message });
-  }
+router.get('/:id',
+  checkForQuery,
+  validateToken,
+  async (req, res) => {
+    try {
+      const { q } = req.query;
+      const talkers = await filterTalkers(q);
+      res.status(200).json(talkers);
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
 });
 
 router.post('/',
