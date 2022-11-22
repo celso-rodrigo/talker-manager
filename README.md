@@ -23,36 +23,22 @@
 |---|---|---|
 |POST| Realiza login e retorna o token | { "email": string, "password": string } |
 
-<hr />
+<hr/>
 
 <h3>/talker</h3>
 
 | Método | Função | Corpo |
 |---|---|---|
 |GET| Retorna todas as pessoas palestrantes | |
-
-
-| Método | Função | Corpo |
-|---|---|---|
 |POST| Cadastra pessoa palestrante | { "name": string, "age": number, "talk": { "watchedAt": string(DD/MM/YYYY), "rate": number } } |
-
-<hr />
 
 <h3>/talker/:id</h3>
 
 | Método | Função | Corpo |
 |---|---|---|
 |GET| Retorna pessoa palestrante com base no id | |
-
-| Método | Função | Corpo |
-|---|---|---|
 |PUT| Edita pessoa palestrante com base no id | { "name": string, "age": number, "talk": { "watchedAt": string(DD/MM/YYYY), "rate": number } } |
-
-| Método | Função | Corpo |
-|---|---|---|
 |DELETE| Deleta pessoa palestrante com base no id | |
-
-<hr />
 
 <h3>/talker/search?q=searchTerm</h3>
 
